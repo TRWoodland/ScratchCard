@@ -6,9 +6,14 @@ def sql_connection():
     db = mysql.connector.connect(
         host="localhost",
         user="godda",
-        passwd="brannagon")
+        passwd="brannagon",
+        database="testdatabase")
     return db
+db = sql_connection()
+mycursor = db.cursor()
 
+
+# Connect to Database
 def sql_connection_database(selected_database):
     db = mysql.connector.connect(
         host="localhost",
@@ -17,32 +22,116 @@ def sql_connection_database(selected_database):
         database=selected_database)
     return db
 
-def create_database(db, database_name):
-    mycursor = db.cursor()
-    mycursor.execute("CREATE DATABASE " + database_name)
-    return mycursor
-
-# databases = testdatabase
-
 db = sql_connection_database("testdatabase")
 mycursor = db.cursor()
 
-# VARCHAR(50)
-# smallint # uses less memory
-# UNSIGNED # always going to be a positive number (less memory)
-# int PRIMARY KEY AUTO_INCREMENT
-#def create_table(CREATE TABLE Person (name VARCHAR(50), age smallint UNSIGNED, personID int PRIMARY KEY AUTO_INCREMENT)
+def create_database(cursor, database_name):
+    cursor.execute("CREATE DATABASE " + database_name)
 
-def describe_table(mycursor, table):
-    mycursor.execute("DESCRIBE " + table)
-    for x in mycursor:
+
+# databases = testdatabase
+
+
+
+# Creating a table
+# https://dev.mysql.com/doc/refman/8.0/en/data-types.html
+# VARCHAR(50)
+# smallint # uses less memory. 32767 max
+# UNSIGNED # Will this field ever contain a negative value? If no, then you want an UNSIGNED data type.
+# int PRIMARY KEY AUTO_INCREMENT
+mycursor.execute("CREATE TABLE Person (name VARCHAR(50), age smallint UNSIGNED, personID int PRIMARY KEY AUTO_INCREMENT)")
+
+def show_tables(cursor):
+    cursor.execute("SHOW TABLES")
+show_tables(mycursor)
+
+def describe_table(cursor, table):
+    cursor.execute("DESCRIBE " + table)
+    for x in cursor:
         print(x)
+describe_table(mycursor, "person")
+
+# to print all databases
+def show_databases(cursor):
+    cursor.execute("SHOW DATABASES")
+    print(cursor.fetchall())
+show_databases(mycursor)
+
+
+def select_database(cursor, database):
+    cursor.execute(f"USE {database}")
+select_database(mycursor, "testdatabase")
+
 
 # add to DB
-mycursor.execute("INSERT INTO Person (name, age) VALUES (%s,%s)", "Bob", 99)
+mycursor.execute("INSERT INTO person (name, age) VALUES (%s,%s)",
+                 ("Bob", 99))
 # commit to DB
 db.commit()
 
-# select everything from Person
-mycursor.execute("SELECT * FROM Person")
+# select everything from person
+# print everything from person
+def select_all_print(cursor, table):
+    cursor.execute("SELECT * FROM " + table)
+    for x in cursor:
+        print(x)
+select_all_print(mycursor, "person")
 
+# examples
+# ENUM means select one.
+# mycursor.execute("CREATE TABLE test (name VARCHAR(50) NOT NULL, created datetime NOT NULL, gender ENUM('M','F','O') NOT NULL , id int PRIMARY KEY NOT NULL AUTO_INCREMENT)")
+# mycursor.execute("INSERT INTO test (name, created, gender) VALUES (%s,%s,%s)", ("TIM", datetime.now(), "M"))
+# mycursor.execute("INSERT INTO test (name, created, gender) VALUES (%s,%s,%s)", ("TIM", datetime.now(), "M"))
+# mycursor.execute("INSERT INTO test (name, created, gender) VALUES (%s,%s,%s)", ("John", datetime.now(), "F"))
+
+# select all males
+mycursor.execute("SELECT * FROM test WHERE gender = 'M'")
+for x in mycursor:
+    print(x)
+
+# select all males
+mycursor.execute("SELECT * FROM test WHERE gender = 'F' ORDER BY id DESC")
+for x in mycursor:
+    print(x)
+
+# select specific fields
+mycursor.execute("SELECT id, name FROM test")
+for x in mycursor:
+    print(x)
+
+# alter
+mycursor.execute("ALTER TABLE test ADD COLUMN food VARCHAR(50) NOT NULL")
+# delete column
+mycursor.execute("ALTER TABLE test DROP food")
+# rename
+mycursor.execute("ALTER TABLE test CHANGE name first_name VARCHAR(50) NOT NULL")
+
+# Foreign key creation
+Q1 = "CREATE TABLE Users (id int PRIMARY KEY AUTO_INCREMENT, name VARCHAR(50), passwd VARCHAR(50))"
+Q2 = "CREATE TABLE Scores (user_id int PRIMARY KEY, FOREIGN KEY(user_id) REFERENCES Users(id), game1 int DEFAULT 0, game2 int DEFAULT 0)"
+mycursor.execute(Q1)
+mycursor.execute(Q2)
+
+mycursor.execute("SHOW TABLES")
+for x in mycursor:
+    print(x)
+
+
+# adding many users at once
+user_list = [("Picard", "bald"),
+            ("Riker", "boobies"),
+            ("Worf", "kaplah")]
+score_list = [(23, 34),
+            (45, 55),
+            (66, 77)]
+Q3 = "INSERT INTO users (name, passwd) VALUES (%s, %s)"
+Q4 = "INSERT INTO scores (user_id, game1, game2) VALUES (%s, %s, %s)"
+
+for x, user in enumerate(user_list):
+    mycursor.execute(Q3, user)
+    last_id = mycursor.lastrowid # the id of the last accessed
+    mycursor.execute(Q4, (last_id,) + score_list[x])
+
+mycursor.execute("SELECT * FROM scores")
+for x in mycursor:
+    print(x)
