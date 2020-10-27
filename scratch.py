@@ -1,10 +1,10 @@
 # pip install mysql-connector-python
-import mysql.connector
+import sc_mysql.connector
 from datetime import datetime
 
 
 # connect to mySQL
-db = mysql.connector.connect(
+db = sc_mysql.connector.connect(
         host="localhost",
         user="godda",
         passwd="brannagon",
@@ -14,3 +14,4 @@ mycursor = db.cursor(buffered=True)
 
 # mycursor.execute("CREATE TABLE Person (name VARCHAR(50), age smallint UNSIGNED, personID int PRIMARY KEY AUTO_INCREMENT)")
 
+12675539

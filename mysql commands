@@ -1,0 +1,39 @@
+https://alvinalexander.com/blog/post/mysql/show-users-i-ve-created-in-mysql-database/
+
+# TO FIX PROBLEM CONNECTING
+https://stackoverflow.com/questions/60359505/2003-cant-connect-to-mysql-server-on-192-168-0-143306-111-connection-refus
+"""thanks for the answer! But i found it! if anybody encounters the same error i had, to solve that problem, you need to modify the /etc/mysql/mariadb.conf.d/50-server.cnf file since today when you install mysql, it install mariadb instead and i guess the config files are different. then once you get into 50-server.cnf you just need to comment "bind-address = 127.0.0.1" and it will now listen to other IPs requests."""
+
+# to restart service
+sudo service mysql restart
+
+# Log in
+sudo mysql -u root -p
+sudo mysql -u scbot -p
+
+
+# view all users
+select * from mysql.user
+
+or simpler
+
+select host, user, password from mysql.user;
+
+#create database
+CREATE DATABASE exampledb;
+
+USE scratchdb;
+
+
+# create user
+CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';
+
+# grant priveges
+GRANT ALL PRIVILEGES ON exampledb.* TO 'username'@'localhost';
+change localhost to allow access from any ip
+
+#GRANT ALL PRIVILEGES ON scratchdb.* TO 'scratchbot'@'%' IDENTIFIED BY 't1ck2099';
+
+#must do this afterwards
+FLUSH PRIVILEGES;
+12675539

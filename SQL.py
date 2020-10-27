@@ -1,9 +1,18 @@
 # pip install mysql-connector-python
-import mysql.connector
+# AWS mySQL admin sp00nfuture instance scratchcardDB port3306
+import sc_mysql.connector
+# "database-1.cviu5dc5mrn3.eu-west-2.rds.amazonaws.com"
+
+def sql_connection():
+    db = sc_mysql.connector.connect(host="scratchcardDB.cviu5dc5mrn3.eu-west-2.rds.amazonaws.com", port=3306, user="admin", passwd="t1ck2099", database="scratchcardDB")
+    return db
+db = sql_connection()
+mycursor = db.cursor()
+
 
 # connect to mySQL
 def sql_connection():
-    db = mysql.connector.connect(
+    db = sc_mysql.connector.connect(
         host="localhost",
         user="godda",
         passwd="brannagon",
@@ -15,7 +24,7 @@ mycursor = db.cursor()
 
 # Connect to Database
 def sql_connection_database(selected_database):
-    db = mysql.connector.connect(
+    db = sc_mysql.connector.connect(
         host="localhost",
         user="godda",
         passwd="brannagon",
@@ -105,6 +114,9 @@ mycursor.execute("ALTER TABLE test ADD COLUMN food VARCHAR(50) NOT NULL")
 mycursor.execute("ALTER TABLE test DROP food")
 # rename
 mycursor.execute("ALTER TABLE test CHANGE name first_name VARCHAR(50) NOT NULL")
+
+
+
 
 # Foreign key creation
 Q1 = "CREATE TABLE Users (id int PRIMARY KEY AUTO_INCREMENT, name VARCHAR(50), passwd VARCHAR(50))"
