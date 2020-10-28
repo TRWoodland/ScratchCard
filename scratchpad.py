@@ -1,0 +1,2 @@
+string = r"""<a href="https://www.cdn-national-lottery.co.uk/c/i/page/scratchcards/popup/winterwonderlines-2020.jpg~999e" target="_blank" title="This image will open in a new window"><img alt="" src="https://www.cdn-national-lottery.co.uk/c/i/page/scratchcards/thumbnails/winterwonderlines-2020-thumbnail.jpg~453d"/></a>',<a href="/c/i/page/scratchcards/popup/100loaded_2020.jpg~8817" target="_blank" title="This image will open in a new window"><img alt="" src="/c/i/page/scratchcards/thumbnails/100loaded_2020-thumbnail.jpg~c9f5"/></a>
+qwe[]"""
