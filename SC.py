@@ -5,10 +5,14 @@ import re  # regex
 import pprint as pp  # prettyprint
 import os  # for finding current working directory
 from scratchcards import Scratchcards
+from Logger import SC_Logfile
 
 class Scraper:
     def __init__(self):
         self.temp_pdfs = os.path.join((os.getcwd()), 'temp')  # string for file path to Temp folder
+        if not os.path.exists("temp"):
+            os.mkdir("temp")
+            print("Directory created")
         print('Files will be saved in ', self.temp_pdfs)
 
         self.source = urllib.request.urlopen('https://www.national-lottery.co.uk/games/gamestore/scratchcards').read()
@@ -17,7 +21,6 @@ class Scraper:
 
         self.table_rows = self.table.find_all('tr')  # table_rows list, not standard list type. BS4 element result set.
         self.sc_list = []
-
 
     def scrape(self):
         for tr in self.table_rows[1:]:  # for tableresults in tablerows. Skip first item.
@@ -29,6 +32,9 @@ class Scraper:
             for a in tr.find_all('a'):
                 # print(a['href'])
                 row.append(str(a['href']))  # image & pdf
+
+            """ add temp folder"""
+            row.append(self.temp_pdfs)
 
             """ STORE DATA """
             self.sc_list.append(Scratchcards(row))  # list of objects
@@ -42,10 +48,10 @@ class Scraper:
     def verify(self):
         for index, scratchcard in enumerate(self.sc_list):
             if not self.sc_list[index].check_data():
-                print("Something wrong with:")
+                #print("Something wrong with:")
                 print(self.sc_list[index])
 
-            print(index, scratchcard)
+            #print(index, scratchcard)
 
 
 
