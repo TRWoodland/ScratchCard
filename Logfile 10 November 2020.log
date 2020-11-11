@@ -1,0 +1,30 @@
+2020-11-10 08:49:45,118 - Scraper - INFO - Process starting
+2020-11-10 09:37:15,119 - Scraper - INFO - Process starting
+2020-11-10 09:37:23,063 - Scraper.Scratchcards - ERROR - 1224 gamename wrong length: 
+2020-11-10 09:37:24,015 - Scraper - ERROR - Deleting Scratchcard from processing because something invalid:gamename: 
+gamenumber: 1224
+cost: 1.0
+bigprize: 10000.0
+remainingtop: 6
+image: https://www.cdn-national-lottery.co.uk/c/i/page/scratchcards/popup/5x-2020.jpg
+pdf: 5x-2020.pdf
+pdf_url: https://www.national-lottery.co.uk/c/files/scratchcards/5x-2020.pdf
+temp_pdfs: F:\Google Drive\Synced\PythonProjects\ScratchCard\temp
+odds_at_launch: [1.0, 4.34]
+total_cards_at_launch: 17234280
+winning_cards_launch: 3971032.2580645164
+
+2020-11-10 10:36:27,862 - Scraper - INFO - Process starting
+2020-11-10 10:37:47,737 - Scraper - INFO - Process starting
+2020-11-10 16:42:09,195 - Scraper - INFO - Process starting
+2020-11-10 16:42:54,144 - Scraper.SC_Mysql - ERROR - SOMETHING
+2020-11-10 18:36:26,890 - Scraper - INFO - Process starting
+2020-11-10 18:37:13,837 - Scraper.SC_Mysql - ERROR - SOMETHING
+2020-11-10 18:39:47,194 - Scraper - INFO - Process starting
+2020-11-10 18:40:34,793 - Scraper.SC_Mysql - ERROR - SOMETHING
+2020-11-10 18:58:58,857 - Scraper - INFO - Process starting
+2020-11-10 18:59:46,582 - Scraper.SC_Mysql - ERROR - SOMETHING
+2020-11-10 19:15:59,155 - Scraper - INFO - Process starting
+2020-11-10 19:17:05,852 - Scraper.SC_Mysql - ERROR - SOMETHING
+2020-11-10 19:20:36,895 - Scraper - INFO - Process starting
+2020-11-10 19:21:42,000 - Scraper.SC_Mysql - ERROR - SOMETHING

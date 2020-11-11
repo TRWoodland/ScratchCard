@@ -43,8 +43,7 @@ class SC_Mysql:
     """ end of REPR """
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.mycursor.close()
-        self.connection.close()
+        self.disconnect()
 
     def create_main(self):
         self.mycursor.execute("CREATE TABLE main (gamenumber SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (gamenumber),"
@@ -76,10 +75,10 @@ class SC_Mysql:
     def table_exist(self, table):
         self.mycursor.execute("SHOW TABLES")
         for x in self.mycursor:
-            if x['Tables_in_scdb'] == table:
-                print("Table found in DB: " + table)
+            if x['Tables_in_scdb'] == str(table):
+                print("Table found in DB: " + str(table))
                 return True
-        print("Table not found in DB: " + table)
+        print("Table not found in DB: " + str(table))
         return False
 
     def describe_table(self):
@@ -107,15 +106,25 @@ class SC_Mysql:
     def exists_main(self):  # gets the number of rows affected by the command executed
         # self.mycursor.execute("SELECT EXISTS(SELECT * FROM main WHERE gamenumber=%s);")
 
-        self.mycursor.execute(f"SELECT EXISTS(SELECT * FROM main WHERE gamenumber = {self.scratchcard.gamenumber});")
-
-        row_count = self.mycursor.rowcount
-        if row_count == 0:
+        self.mycursor.execute(f"SELECT * FROM main WHERE gamenumber = {self.scratchcard.gamenumber}")
+        x = self.mycursor.fetchall()
+        if not x:  # if nothing found
             print(f"No rows found with: {self.scratchcard.gamenumber}")
             return False
         else:
-            print(f"Number of Rows found with: {self.scratchcard.gamenumber} are {row_count}")
+            print(f"Row found with: {self.scratchcard.gamenumber}")
             return True
+
+
+        # self.mycursor.execute(f"SELECT EXISTS(SELECT * FROM main WHERE gamenumber = {self.scratchcard.gamenumber});")
+        #
+        # row_count = self.mycursor.rowcount
+        # if row_count == 0:
+        #     print(f"No rows found with: {self.scratchcard.gamenumber}")
+        #     return False
+        # else:
+        #     print(f"Number of Rows found with: {self.scratchcard.gamenumber} are {row_count}")
+        #     return True
 
     def exists_child(self):  # gets the number of rows affected by the command executed
         self.mycursor.execute(f"SELECT EXISTS(SELECT * FROM `{self.scratchcard.gamenumber}` WHERE gnumber = {self.scratchcard.gamenumber});")
@@ -135,14 +144,6 @@ class SC_Mysql:
         self.mycursor.execute(f"(UPDATE `{table}` SET remaingtop=`{self.scratchcard.remainingtop}` WHERE gamenumber = {self.scratchcard.gamenumber});")
 
     def insert_main(self):
-        print(str(type(self.scratchcard.gamenumber)))
-        print(str(type(self.scratchcard.gamename)))
-        print(str(type(self.scratchcard.odds_at_launch)))
-        print(str(type(self.scratchcard.total_cards_at_launch)))
-        print(str(type(self.scratchcard.cost)))
-        print(str(type(self.scratchcard.bigprize)))
-        print(str(type(self.scratchcard.image)))
-        print(str(type(self.scratchcard.pdf_url)))
         print(self.scratchcard.gamenumber, self.scratchcard.gamename, self.scratchcard.odds_at_launch,
                self.scratchcard.total_cards_at_launch, self.scratchcard.cost, self.scratchcard.bigprize,
                self.scratchcard.image, self.scratchcard.pdf_url, self.scratchcard.pdf)
@@ -201,7 +202,7 @@ class SC_Mysql:
             # add to main
 
         print(""" IS THERE A GAMENUMBER SHEET """)
-        if not self.table_exist(f"{self.scratchcard.gamenumber}"):    # if no child table
+        if not self.table_exist(self.scratchcard.gamenumber):    # if no child table
             self.create_child()
             # create child
         print( """ get earliest DATESTARTED FROM GAMENUMBER SHEET """)
@@ -224,11 +225,19 @@ class SC_Mysql:
                 print(self.scratchcard.gamenumber, self.scratchcard.remainingtop,
                       self.scratchcard.lastupdate, self.scratchcard.datestarted)
                 self.insert_child()
-    #self.process()
+        self.disconnect()
 
 
-#
 
+
+""" WORKING VALUE IN TABLE CHECK
+mycursor.execute(f"SELECT * FROM main WHERE gamenumber = {gn}")
+x = mycursor.fetchall()
+if not x:
+...     print(1)
+...     
+
+"""
 b = 1
 if b == 2:
     import mysql.connector
