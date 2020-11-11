@@ -3,6 +3,7 @@ from datetime import datetime
 
 class SC_Logfile:
     def __init__(self, message=""):
+
         self.message = message
         self.today = datetime.today()
         self.logger_file = self.today.strftime("Logfile %d %B %Y")  # Today's date
