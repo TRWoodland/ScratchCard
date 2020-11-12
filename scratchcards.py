@@ -1,11 +1,7 @@
 import re
 import requests
 import os
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer.converter import TextConverter
-from pdfminer.layout import LAParams
-from pdfminer.pdfpage import PDFPage
-from io import StringIO
+import fitz
 import logging
 
 class Scratchcards:
@@ -14,8 +10,6 @@ class Scratchcards:
         #self.module_logger.info("something")
         #self.module_logger.error("thing")
 
-
-        #  ['', '12 Months Richer', '1213', '£5', '£1,200,000', '4']
         self.gamename = rowdata[1]
         self.gamenumber = rowdata[2]
         self.cost = rowdata[3]
@@ -37,7 +31,7 @@ class Scratchcards:
         self.pdf_text = str()
         self.odds_at_launch = str()
         self.total_cards_at_launch = int()
-        self.winning_cards_launch = float()
+        #self.winning_cards_launch = float()
 
         """ FIX IMAGE URL """
         pattern = re.compile(r"""(page\/scratchcards\/popup\/.*\.jpg)""")
@@ -75,7 +69,7 @@ class Scratchcards:
                    + "temp_pdfs: " + str(self.temp_pdfs) + "\n"
                    + "odds_at_launch: " + str(self.odds_at_launch) + "\n"
                    + "total_cards_at_launch: " + str(self.total_cards_at_launch) + "\n"
-                   + "winning_cards_launch: " + str(self.winning_cards_launch) + "\n"
+                   #+ "winning_cards_launch: " + str(self.winning_cards_launch) + "\n"
                    )
 
     def validity(self, string):
@@ -203,23 +197,10 @@ class Scratchcards:
             return True
 
     def pdf_to_text(self):
-        rsrcmgr = PDFResourceManager()
-        retstr = StringIO()
-        codec = 'utf-8'
-        laparams = LAParams()
-        device = TextConverter(rsrcmgr, retstr, laparams=laparams)  # had to remove codec=codec to get it to work
-        with open(os.path.join(self.temp_pdfs, self.pdf), 'rb') as f:
-            interpreter = PDFPageInterpreter(rsrcmgr, device)
-            password = ""
-            maxpages = 0
-            caching = True
-            pagenos = set()
-            for page in PDFPage.get_pages(f, pagenos, maxpages=maxpages, password=password, caching=caching,
-                                          check_extractable=True):
-                interpreter.process_page(page)
-            text = retstr.getvalue()
-        device.close()
-        retstr.close()
+        text = ''
+        with fitz.open(os.path.join(self.temp_pdfs, self.pdf)) as doc:
+            for page in doc:
+                text += page.getText()
         return text
 
     def text_to_odds(self):
@@ -232,7 +213,3 @@ class Scratchcards:
         total_cards_at_launch_re = total_cards_at_launch_re.search(self.pdf_text)
 
         return odds_at_launch_re[0], total_cards_at_launch_re[0]
-
-i = r"""'https://www.cdn-national-lottery.co.uk/c/i/page/scratchcards/popup/winterwonderlines-2020.jpg~999e'"""
-p = r"""'/c/files/scratchcards/winterwonderlines-2020.pdf~3'"""
-p2 = r"""https://www.national-lottery.co.uk/c/files/scratchcards/winterwonderlines-2020.pdf"""

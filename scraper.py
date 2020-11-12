@@ -1,14 +1,10 @@
 import bs4 as bs  # webscraper
 import urllib.request
-import requests  # downloads files
-import re  # regex
-import pprint as pp  # prettyprint
-import os  # for finding current working directory
-from scratchcards import Scratchcards
-from Logger import SC_Logfile
 import logging
 from datetime import datetime
+import tempfile
 from sc_mysql import SC_Mysql
+from scratchcards import Scratchcards
 
 class Scraper:
     def __init__(self):
@@ -28,10 +24,7 @@ class Scraper:
         self.logger.addHandler(self.ch)
 
         """ TEMPDIR """
-        self.temp_pdfs = os.path.join((os.getcwd()), 'temp')  # string for file path to Temp folder
-        if not os.path.exists("temp"):
-            os.mkdir("temp")
-            print("Directory created")
+        self.temp_pdfs = tempfile.gettempdir()  # string for file path to Temp folder
         print('Files will be saved in ', self.temp_pdfs)
 
         """ INIT THE SOUP"""
@@ -62,14 +55,8 @@ class Scraper:
             row.append(self.temp_pdfs)
 
             """ STORE DATA """
-            #self.logger.info('creating an instance')
             self.sc_list.append(Scratchcards(row))  # list of objects
             # print("Row data: " + str(row))
-
-        # print(self.sc_list[0])
-        # print(self.sc_list[1])
-        # print(self.sc_list[2])
-        # print(self.sc_list[3])
 
     """ Check and Completes data, PDF scraping """
     def verify(self):
@@ -82,11 +69,10 @@ class Scraper:
     """ store in DB"""
     def store(self):
         for index, scratchcard in enumerate(self.sc_list):
-            sc_db = SC_Mysql(self.sc_list[index])
-            sc_db.process()
-
+            sc_db = SC_Mysql(self.sc_list[index])   # create instances
+            sc_db.process()                         # upload to db
 
 scrape = Scraper()
-scrape.scrape()
-scrape.verify()
-scrape.store()
+scrape.scrape()     # get info
+scrape.verify()     # sort info
+scrape.store()      # store info

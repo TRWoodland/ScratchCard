@@ -1,10 +1,5 @@
-# pi
-# root or scratchbot
-# t1ck2099
-
-import mysql.connector
+import pymysql.cursors
 from datetime import datetime
-# Connect to the database
 import logging
 
 class SC_Mysql:
@@ -12,23 +7,33 @@ class SC_Mysql:
         self.scratchcard = scratchcard
 
         self.module_logger = logging.getLogger('Scraper.SC_Mysql')
-        self.module_logger.error("SOMETHING")
+        #self.module_logger.error("SOMETHING")
 
-    """ CHILD TABLE HYPHEN `` """
+    """ CHILD TABLE HYPHEN ` REQUIRED ONLY WHEN REFERRING TO GAMENUMBER TABLES"""
 
     """ end of INIT """
 
     def connect(self):
         try:
-            self.connection = mysql.connector.connect(host='192.168.1.124',
-                                                      user='scbot',
-                                                      password='t1ck2099',
-                                                      db='scdb'
-                                                      )
-            self.mycursor = self.connection.cursor(dictionary=True, buffered=True)
-            self.mycursor.execute("USE scdb;")
+            REGION = 'eu-west-2a'
+            port = 3306
+            self.connection = pymysql.connect(r"""scdb.cviu5dc5mrn3.eu-west-2.rds.amazonaws.com""",
+                                              user="goddamuglybob",
+                                              passwd="t1ck2099",
+                                              db="scdb",
+                                              charset='utf8mb4',
+                                              cursorclass=pymysql.cursors.DictCursor,
+                                              connect_timeout=5)
 
-        except mysql.connector.Error as error:
+            # self.connection = pymysql.connect(host='192.168.1.124',
+            #                              user='scbot',
+            #                              password='t1ck2099',
+            #                              db='scdb',
+            #                              charset='utf8mb4',
+            #                              cursorclass=pymysql.cursors.DictCursor)
+            self.mycursor = self.connection.cursor()
+
+        except self.connection.Error as error:
             print("Error connecting to MYSQL DB")
             self.module_logger.error(str(self.scratchcard.gamenumber) + " Error connecting to MYSQL DB.")
 
@@ -36,11 +41,8 @@ class SC_Mysql:
         self.mycursor.close()
         self.connection.close()
 
-
     def __repr__(self):
-        print("What am I")
-
-    """ end of REPR """
+        print(str(self.connection.server_status()))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.disconnect()
@@ -116,16 +118,6 @@ class SC_Mysql:
             return True
 
 
-        # self.mycursor.execute(f"SELECT EXISTS(SELECT * FROM main WHERE gamenumber = {self.scratchcard.gamenumber});")
-        #
-        # row_count = self.mycursor.rowcount
-        # if row_count == 0:
-        #     print(f"No rows found with: {self.scratchcard.gamenumber}")
-        #     return False
-        # else:
-        #     print(f"Number of Rows found with: {self.scratchcard.gamenumber} are {row_count}")
-        #     return True
-
     def exists_child(self):  # gets the number of rows affected by the command executed
         self.mycursor.execute(f"SELECT EXISTS(SELECT * FROM `{self.scratchcard.gamenumber}` WHERE gnumber = {self.scratchcard.gamenumber});")
         row_count = self.mycursor.rowcount
@@ -162,7 +154,6 @@ class SC_Mysql:
         val = (self.scratchcard.gamenumber, self.scratchcard.remainingtop,
                self.scratchcard.lastupdate, self.scratchcard.datestarted)
         self.mycursor.execute(sql, val)
-
         self.connection.commit()
 
     def remaining_top(self):     # find rows that match remainingtop
@@ -192,27 +183,26 @@ class SC_Mysql:
     def process(self):
         self.connect() # connect to db
 
-        print(""" CREATE MAIN IF NOT EXIST""")
+        """ CREATE MAIN IF NOT EXIST"""
         if not self.table_exist("main"):
             self.create_main()
 
-        print(""" IS GAMENUMBER IN MAIN""")
+        """ IS GAMENUMBER IN MAIN"""
         if not self.exists_main():                          # if gamenumber not in main
             self.insert_main()
             # add to main
 
-        print(""" IS THERE A GAMENUMBER SHEET """)
+        """ IS THERE A GAMENUMBER SHEET """
         if not self.table_exist(self.scratchcard.gamenumber):    # if no child table
             self.create_child()
             # create child
-        print( """ get earliest DATESTARTED FROM GAMENUMBER SHEET """)
+        """ get earliest DATESTARTED FROM GAMENUMBER SHEET """
         self.scratchcard.datestarted = self.date_started()
 
-        print(""" LASTUPDATE """)
+        """ LASTUPDATE """
         self.scratchcard.lastupdate = datetime.today().strftime("%Y-%m-%d")
 
-        print(""" IS REMAININGTOP THE SAME AS CURRENT NUMBER ON SHEET """)
-
+        """ IS REMAININGTOP THE SAME AS CURRENT NUMBER ON SHEET """
         rt_status, rt_int = self.remaining_top()
         if not rt_status:    # if false nothing found, just insert into table
             print(self.scratchcard.gamenumber, self.scratchcard.remainingtop,
@@ -221,157 +211,7 @@ class SC_Mysql:
         else:
             if self.scratchcard.remainingtop < rt_int:      # if new RT is less than what is currently on the table
                 """ ADD NEW ENTRY TO TABLE """
-                #self.scratchcard.remainingtop = rt_int
-                print(self.scratchcard.gamenumber, self.scratchcard.remainingtop,
-                      self.scratchcard.lastupdate, self.scratchcard.datestarted)
                 self.insert_child()
         self.disconnect()
 
 
-
-
-""" WORKING VALUE IN TABLE CHECK
-mycursor.execute(f"SELECT * FROM main WHERE gamenumber = {gn}")
-x = mycursor.fetchall()
-if not x:
-...     print(1)
-...     
-
-"""
-b = 1
-if b == 2:
-    import mysql.connector
-    from datetime import datetime
-    # Connect to the database
-    import logging
-
-    gamenumber = 1213
-    gamename = "12 Months Richer"
-    odds_at_launch = "1 in 3.35"
-    total_cards_at_launch = 13564320
-    cost = 5.0
-    bigprize = 1200000.0
-    image = r"""https: // www.cdn - national - lottery.co.uk / c / i / page / scratchcards / popup / 12
-    monthsricher.jpg"""
-    pdf_url = r"""https: // www.national - lottery.co.uk / c / files / scratchcards / 12
-    monthsricher.pdf"""
-    pdf = "monthsricher.pdf"
-    remainingtop = 3
-    lastupdate = datetime.today().strftime("%Y-%m-%d")
-    datestarted = datetime.today().strftime("%Y-%m-%d")
-
-    connection = mysql.connector.connect(host='192.168.1.124',
-                                         user='scbot',
-                                         password='t1ck2099',
-                                         db='scdb'
-                                         )
-    mycursor = connection.cursor(dictionary=True, buffered=True)
-    mycursor.execute("USE scdb;")
-
-
-    def con(f):  # The first argument is the wrapper
-        def wrapper():
-            print("Connecting to DB")
-            f()
-            print("Disconnecting from DB")
-
-    @con
-    def something(bob):
-        print(bob)
-    something("qwerty")
-
-
-
-# # from sc_mysql import SC_Mysql
-# """ DUMMY DATA """
-# gamenumber = 1234
-# gamename = "test"
-# odds_at_launch = "1 in 4321"
-# total_cards_at_launch = 123456
-# cost = 1.5
-# bigprize = 500.5
-# image = r"""https://www.cdn-national-lottery.co.uk/c/i/page/scratchcards/popup/12monthsricher.jpg~1c5c"""
-# pdf_url = r"""https://www.cdn-national-lottery.co.uk/c/i/page/scratchcards/popup/12monthsricher.jpg~1c5c"""
-# pdf = r"""https://www.cdn-national-lottery.co.uk/c/i/page/scratchcards/popup/12monthsricher.jpg~1c5c"""
-# remainingtop = 321
-# lastupdate = datetime.today().strftime("%Y-%m-%d")
-# datestarted = datetime.today().strftime("%Y-%m-%d")
-#
-# sc = SC_Mysql(gamenumber, gamename, odds_at_launch, total_cards_at_launch, cost, bigprize, image,
-#                  pdf_url, pdf, remainingtop, lastupdate, datestarted)
-#
-#
-# if "main" not in sc.list_of_tables():
-#     sc.create_main()
-# if sc.gamenumber not in sc.list_of_tables():
-#     sc.create_child()
-#
-# # check is on main. add to main
-#
-# if sc.remainingtop == 0:
-#     pass
-#     #updatemain
-#     #updatesheet
-#
-#
-# #sc.create_table()
-# #sc.describe_table()
-#
-# tablelist = []
-#
-# for table in [tables[0] for tables in mycursor.fetchall()]:
-#     tablelist.append(table)
-#
-#
-#
-#
-# """ FUNCTIONS """
-# # connect to mySQL
-# def connect_mysql(database="scdb"):
-#     db = mysql.connector.connect(host='192.168.1.124',
-#                                       user='scbot',
-#                                       password='t1ck2099',
-#                                       db='scdb'
-#                                       )
-#     mycursor = db.cursor()
-#     mycursor.execute("USE scdb;")
-#     return db, mycursor
-# db, mycursor = connect_mysql()
-#
-# # to print all databases
-# def show_databases(c):
-#     c.execute("SHOW DATABASES")
-#     print(c.fetchall())
-# #show_databases(mycursor)
-#
-# # select database
-# def select_database(c, database="scdb"):
-#     c.execute(f"USE {database}")
-# #select_database(mycursor)
-#
-# # create_database
-# def create_database(c, database_name):
-#     c.execute("CREATE DATABASE " + database_name)
-#
-# def show_tables(c):
-#     c.execute("SHOW TABLES")
-#     for x in c:
-#         print(x)
-# #show_tables(mycursor)
-#
-# def describe_table(c, table="main"):
-#     c.execute("DESCRIBE " + table)
-#     for x in c:
-#         print(x)
-# #describe_table(mycursor)
-#
-#
-#
-#
-#
-# # add to DB
-# #mycursor.execute("INSERT INTO person (name, age) VALUES (%s,%s)",
-# #                 ("Bob", 99))
-#
-# # COMMIT
-# db.commit()
