@@ -13,15 +13,15 @@ class Scraper:
         self.logger.setLevel(logging.DEBUG)
         self.fh = logging.FileHandler(datetime.today().strftime("Logfile %d %B %Y.log"))  # create file handler which logs even debug messages
         self.fh.setLevel(logging.DEBUG)
-        self.ch = logging.StreamHandler()  # create console handler with a higher log level
-        self.ch.setLevel(logging.ERROR)
+        # self.ch = logging.StreamHandler()  # create console handler with a higher log level
+        # self.ch.setLevel(logging.ERROR)
         # create formatter and add it to the handlers
         self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         self.fh.setFormatter(self.formatter)
-        self.ch.setFormatter(self.formatter)
+        # self.ch.setFormatter(self.formatter)
         # # add the handlers to the logger
         self.logger.addHandler(self.fh)
-        self.logger.addHandler(self.ch)
+        # self.logger.addHandler(self.ch)
 
         """ TEMPDIR """
         self.temp_pdfs = tempfile.gettempdir()  # string for file path to Temp folder
@@ -72,7 +72,4 @@ class Scraper:
             sc_db = SC_Mysql(self.sc_list[index])   # create instances
             sc_db.process()                         # upload to db
 
-scrape = Scraper()
-scrape.scrape()     # get info
-scrape.verify()     # sort info
-scrape.store()      # store info
+
