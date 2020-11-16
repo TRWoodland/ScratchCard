@@ -6,12 +6,21 @@ class SC_Mysql:
     def __init__(self, scratchcard):
         self.scratchcard = scratchcard
 
-        self.module_logger = logging.getLogger('Scraper.SC_Mysql')
-        #self.module_logger.error("SOMETHING")
+        if len(logging.getLogger().handlers) > 0:
+            # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
+            # `.basicConfig` does not execute. Thus we set the level directly.
+            logging.getLogger().setLevel(logging.INFO)
+        else:
+            logging.basicConfig(level=logging.INFO)
 
     """ CHILD TABLE HYPHEN ` REQUIRED ONLY WHEN REFERRING TO GAMENUMBER TABLES"""
 
     """ end of INIT """
+
+    @staticmethod
+    def log(cls, string):
+        logging.error(string)
+        print(string)
 
     def connect(self):
         try:
@@ -35,7 +44,7 @@ class SC_Mysql:
 
         except self.connection.Error as error:
             print("Error connecting to MYSQL DB")
-            self.module_logger.error(str(self.scratchcard.gamenumber) + " Error connecting to MYSQL DB.")
+            self.log(self, str(self.scratchcard.gamenumber) + " Error connecting to MYSQL DB.")
 
     def disconnect(self):
         self.mycursor.close()
@@ -160,28 +169,31 @@ class SC_Mysql:
         self.mycursor.execute(f"SELECT * FROM `{self.scratchcard.gamenumber}` ORDER BY remainingtop ASC LIMIT 1")
         rt_int = self.mycursor.fetchone()
 
-        if rt_int != 0:
+        if 'remainingtop' in rt_int:
+            rt_int = rt_int['remainingtop']
+            print(f"{self.scratchcard.gamenumber} Remaingtop found")
+            return True, rt_int
+        else:
             print(f"{self.scratchcard.gamenumber} No Remainingtop found.")
             return False, rt_int
-        else:
-            print(f"{self.scratchcard.gamenumber} Remaingtop found")
-            rt_int = rt_int['remainingtop']
-            return True, rt_int
+
 
     def date_started(self):
         self.mycursor.execute(f"(SELECT * FROM `{self.scratchcard.gamenumber}` ORDER BY datestarted ASC LIMIT 1);")
         ds = self.mycursor.fetchone()
-        if ds != 0:
-            print(f"{self.scratchcard.gamenumber} Datestarted not found. creating new datestarted")
-            ds = datetime.today().strftime("%Y-%m-%d")
-            return ds
+
+        if 'datestarted' in ds:                                 # if ds exists
+            if ds['datestarted'] < datetime.now().date():  # and is less than todays date
+                ds = ds['datestarted']                          # get datestarted
+                print(f"{self.scratchcard.gamenumber} Datestarted found")
+                return ds
         else:
-            print(f"{self.scratchcard.gamenumber} Datestarted found")
-            ds = ds['datestarted']
+            ds = datetime.now().date()                          # new datestarted
+            print(f"{self.scratchcard.gamenumber} Datestarted not found. creating new datestarted")
             return ds
 
     def process(self):
-        self.connect() # connect to db
+        self.connect()  # connect to db
 
         """ CREATE MAIN IF NOT EXIST"""
         if not self.table_exist("main"):

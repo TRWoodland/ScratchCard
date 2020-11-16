@@ -9,19 +9,26 @@ from scratchcards import Scratchcards
 class Scraper:
     def __init__(self):
         """ LOGGER """
-        self.logger = logging.getLogger('Scraper')  # create logger with 'name'
-        self.logger.setLevel(logging.DEBUG)
-        self.fh = logging.FileHandler(datetime.today().strftime("Logfile %d %B %Y.log"))  # create file handler which logs even debug messages
-        self.fh.setLevel(logging.DEBUG)
-        # self.ch = logging.StreamHandler()  # create console handler with a higher log level
-        # self.ch.setLevel(logging.ERROR)
-        # create formatter and add it to the handlers
-        self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        self.fh.setFormatter(self.formatter)
-        # self.ch.setFormatter(self.formatter)
-        # # add the handlers to the logger
-        self.logger.addHandler(self.fh)
-        # self.logger.addHandler(self.ch)
+        # self.logger = logging.getLogger('Scraper')  # create logger with 'name'
+        # self.logger.setLevel(logging.DEBUG)
+        # self.fh = logging.FileHandler(datetime.today().strftime("Logfile %d %B %Y.log"))  # create file handler which logs even debug messages
+        # self.fh.setLevel(logging.DEBUG)
+        # # self.ch = logging.StreamHandler()  # create console handler with a higher log level
+        # # self.ch.setLevel(logging.ERROR)
+        # # create formatter and add it to the handlers
+        # self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        # self.fh.setFormatter(self.formatter)
+        # # self.ch.setFormatter(self.formatter)
+        # # # add the handlers to the logger
+        # self.logger.addHandler(self.fh)
+        # # self.logger.addHandler(self.ch)
+        if len(logging.getLogger().handlers) > 0:
+            # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
+            # `.basicConfig` does not execute. Thus we set the level directly.
+            logging.getLogger().setLevel(logging.INFO)
+        else:
+            logging.basicConfig(level=logging.INFO)
+
 
         """ TEMPDIR """
         self.temp_pdfs = tempfile.gettempdir()  # string for file path to Temp folder
@@ -35,12 +42,12 @@ class Scraper:
         self.table_rows = self.table.find_all('tr')  # table_rows list, not standard list type. BS4 element result set.
         self.sc_list = []
 
-    def log(self, string):
-        self.logger.error(string)
+    @staticmethod
+    def log(cls, string):
+        logging.error(string)
         print(string)
 
     def scrape(self):
-        self.logger.info("Process starting")
         for tr in self.table_rows[1:]:  # for tableresults in tablerows. Skip first item.
             td = tr.find_all('td')  # tabledata in tablerow
             row = [i.text for i in td]  # row = make list of text in table row (BSlist, not normal)

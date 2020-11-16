@@ -6,9 +6,16 @@ import logging
 
 class Scratchcards:
     def __init__(self, rowdata):
-        self.module_logger = logging.getLogger('Scraper.Scratchcards')
+        # self.module_logger = logging.getLogger('Scraper.Scratchcards')
         #self.module_logger.info("something")
         #self.module_logger.error("thing")
+
+        if len(logging.getLogger().handlers) > 0:
+            # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
+            # `.basicConfig` does not execute. Thus we set the level directly.
+            logging.getLogger().setLevel(logging.INFO)
+        else:
+            logging.basicConfig(level=logging.INFO)
 
         self.gamename = rowdata[1]
         self.gamenumber = rowdata[2]
@@ -72,9 +79,13 @@ class Scratchcards:
                    #+ "winning_cards_launch: " + str(self.winning_cards_launch) + "\n"
                    )
 
-    def validity(self, string):
-        self.module_logger.error(string)
+    @staticmethod
+    def log(cls, string):
+        logging.error(string)
         print(string)
+
+    def validity(self, string):
+        self.log(self, string)
         self.valid = False
 
     def check_data(self):
