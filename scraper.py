@@ -6,6 +6,7 @@ import tempfile
 from sc_mysql import SC_Mysql
 from scratchcards import Scratchcards
 
+
 class Scraper:
     def __init__(self):
         """ LOGGER """
@@ -77,6 +78,6 @@ class Scraper:
     def store(self):
         for index, scratchcard in enumerate(self.sc_list):
             sc_db = SC_Mysql(self.sc_list[index])   # create instances
-            sc_db.process()                         # upload to db
-
+            sc_db.process()
+            # upload to db
 

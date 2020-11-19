@@ -65,8 +65,11 @@ class SC_Mysql:
                               "bigprize INT UNSIGNED NOT NULL,"
                               "image TINYTEXT NOT NULL,"
                               "pdf_url TINYTEXT NOT NULL,"
-                              "pdf TINYTEXT NOT NULL)"
+                              "pdf TINYTEXT NOT NULL,"
+                              "status BOOLEAN)"
                               )
+
+        # CREATE TABLE `table_name`(`column_name1`BOOL,`column_name2`BOOLEAN);
         self.connection.commit()
 
     def create_child(self):
@@ -168,11 +171,11 @@ class SC_Mysql:
     def remaining_top(self):     # find rows that match remainingtop
         self.mycursor.execute(f"SELECT * FROM `{self.scratchcard.gamenumber}` ORDER BY remainingtop ASC LIMIT 1")
         rt_int = self.mycursor.fetchone()
-
-        if 'remainingtop' in rt_int:
-            rt_int = rt_int['remainingtop']
-            print(f"{self.scratchcard.gamenumber} Remaingtop found")
-            return True, rt_int
+        if rt_int:      # if rt_int is not None
+            if 'remainingtop' in rt_int:
+                rt_int = rt_int['remainingtop']
+                print(f"{self.scratchcard.gamenumber} Remaingtop found")
+                return True, rt_int
         else:
             print(f"{self.scratchcard.gamenumber} No Remainingtop found.")
             return False, rt_int
@@ -181,12 +184,12 @@ class SC_Mysql:
     def date_started(self):
         self.mycursor.execute(f"(SELECT * FROM `{self.scratchcard.gamenumber}` ORDER BY datestarted ASC LIMIT 1);")
         ds = self.mycursor.fetchone()
-
-        if 'datestarted' in ds:                                 # if ds exists
-            if ds['datestarted'] < datetime.now().date():  # and is less than todays date
-                ds = ds['datestarted']                          # get datestarted
-                print(f"{self.scratchcard.gamenumber} Datestarted found")
-                return ds
+        if ds:      # if ds is not None
+            if 'datestarted' in ds:                                 # if ds exists
+                if ds['datestarted'] < datetime.now().date():  # and is less than todays date
+                    ds = ds['datestarted']                          # get datestarted
+                    print(f"{self.scratchcard.gamenumber} Datestarted found")
+                    return ds
         else:
             ds = datetime.now().date()                          # new datestarted
             print(f"{self.scratchcard.gamenumber} Datestarted not found. creating new datestarted")
@@ -224,6 +227,21 @@ class SC_Mysql:
             if self.scratchcard.remainingtop < rt_int:      # if new RT is less than what is currently on the table
                 """ ADD NEW ENTRY TO TABLE """
                 self.insert_child()
+
+        """ Alive or Dead """
+        self.mycursor.execute(f"SELECT * FROM main WHERE status IS NULL OR status = 1")     # select all alive or null
+        alive = self.mycursor.fetchall()
+
+        for x in alive:
+            self.mycursor.execute(f"SELECT * FROM `{x['gamenumber']}` WHERE remainingtop = 0")  # remainingtop == 0
+            if len(self.mycursor.fetchall()) > 1:                                               # if anything found
+                print("Remainingtop 0, setting main")
+                self.mycursor.execute(f"""UPDATE main SET status=0 WHERE gamenumber={x['gamenumber']}""")
+
+            else:
+                self.mycursor.execute(f"""UPDATE main SET status=1 WHERE gamenumber={x['gamenumber']}""")
+            self.connection.commit()
+
         self.disconnect()
 
 
