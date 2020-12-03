@@ -1,5 +1,5 @@
 import pymysql.cursors
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 class SC_Mysql:
@@ -69,11 +69,10 @@ class SC_Mysql:
                               "status BOOLEAN)"
                               )
 
-        # CREATE TABLE `table_name`(`column_name1`BOOL,`column_name2`BOOLEAN);
         self.connection.commit()
 
     def create_child(self):
-        self.mycursor.execute(f"CREATE TABLE `{self.scratchcard.gamenumber}` (gnumber SMALLINT(5) UNSIGNED NOT NULL, FOREIGN KEY (gnumber) REFERENCES main(gamenumber),"
+        self.mycursor.execute(f"CREATE TABLE sc_log (gnumber SMALLINT(5) UNSIGNED NOT NULL, FOREIGN KEY (gnumber) REFERENCES main(gamenumber),"
                               "remainingtop SMALLINT UNSIGNED NOT NULL,"
                               "lastupdate DATE,"
                               "datestarted DATE);")
@@ -118,8 +117,6 @@ class SC_Mysql:
         self.mycursor.execute("USE 'scratchdb';")
 
     def exists_main(self):  # gets the number of rows affected by the command executed
-        # self.mycursor.execute("SELECT EXISTS(SELECT * FROM main WHERE gamenumber=%s);")
-
         self.mycursor.execute(f"SELECT * FROM main WHERE gamenumber = {self.scratchcard.gamenumber}")
         x = self.mycursor.fetchall()
         if not x:  # if nothing found
@@ -129,9 +126,9 @@ class SC_Mysql:
             print(f"Row found with: {self.scratchcard.gamenumber}")
             return True
 
-
     def exists_child(self):  # gets the number of rows affected by the command executed
-        self.mycursor.execute(f"SELECT EXISTS(SELECT * FROM `{self.scratchcard.gamenumber}` WHERE gnumber = {self.scratchcard.gamenumber});")
+        self.mycursor.execute(f"SELECT EXISTS(SELECT * FROM `{self.scratchcard.gamenumber}` "
+                              f"WHERE gnumber = {self.scratchcard.gamenumber});")
         row_count = self.mycursor.rowcount
         if row_count != 0:
             print(f"No rows found with: {self.scratchcard.gamenumber}")
@@ -141,11 +138,13 @@ class SC_Mysql:
             return True
 
     def return_row(self, table="main"):
-        self.mycursor.execute(f"(SELECT * FROM {table} WHERE gamenumber = {self.scratchcard.gamenumber});")
+        self.mycursor.execute(f"(SELECT * FROM {table} "
+                              f"WHERE gamenumber = {self.scratchcard.gamenumber});")
         return self.mycursor.fetchone()
 
     def update_row(self, table):    # NOT YET USED
-        self.mycursor.execute(f"(UPDATE `{table}` SET remaingtop=`{self.scratchcard.remainingtop}` WHERE gamenumber = {self.scratchcard.gamenumber});")
+        self.mycursor.execute(f"(UPDATE `{table}` SET remaingtop=`{self.scratchcard.remainingtop}` "
+                              f"WHERE gamenumber = {self.scratchcard.gamenumber});")
 
     def insert_main(self):
         print(self.scratchcard.gamenumber, self.scratchcard.gamename, self.scratchcard.odds_at_launch,
@@ -162,16 +161,16 @@ class SC_Mysql:
         self.connection.commit()
 
     def insert_child(self):
-        sql = f"INSERT INTO `{self.scratchcard.gamenumber}` (gnumber, remainingtop, lastupdate, datestarted) VALUES (%s, %s, %s, %s)"
+        sql = f"INSERT INTO sc_log (gnumber, remainingtop, lastupdate, datestarted) VALUES (%s, %s, %s, %s)"
         val = (self.scratchcard.gamenumber, self.scratchcard.remainingtop,
                self.scratchcard.lastupdate, self.scratchcard.datestarted)
         self.mycursor.execute(sql, val)
         self.connection.commit()
 
     def remaining_top(self):     # find rows that match remainingtop
-        self.mycursor.execute(f"SELECT * FROM `{self.scratchcard.gamenumber}` ORDER BY remainingtop ASC LIMIT 1")
+        self.mycursor.execute(f"SELECT * FROM sc_log  WHERE gnumber={self.scratchcard.gamenumber} ORDER BY remainingtop ASC LIMIT 1")
         rt_int = self.mycursor.fetchone()
-        if rt_int:      # if rt_int is not None
+        if rt_int:      # if rt_int is not None TODO: OR statement needed
             if 'remainingtop' in rt_int:
                 rt_int = rt_int['remainingtop']
                 print(f"{self.scratchcard.gamenumber} Remaingtop found")
@@ -180,13 +179,22 @@ class SC_Mysql:
             print(f"{self.scratchcard.gamenumber} No Remainingtop found.")
             return False, rt_int
 
+    def latest_date(self):
+        self.mycursor.execute(f"SELECT lastupdate FROM sc_log WHERE gnumber = {self.scratchcard.gamenumber} ORDER BY lastupdate DESC LIMIT 1;")
+        ld = self.mycursor.fetchone()
+        ld = ld['lastupdate']
+        return ld
+
+    def update_child(self):
+        self.mycursor.execute(f"UPDATE sc_log SET remainingtop = {self.scratchcard.remainingtop} WHERE gnumber = {self.scratchcard.gamenumber} AND lastupdate='{datetime.now().date()}';")
+        self.connection.commit()
 
     def date_started(self):
-        self.mycursor.execute(f"(SELECT * FROM `{self.scratchcard.gamenumber}` ORDER BY datestarted ASC LIMIT 1);")
+        self.mycursor.execute(f"(SELECT * FROM sc_log WHERE gnumber={self.scratchcard.gamenumber} ORDER BY datestarted ASC LIMIT 1);")
         ds = self.mycursor.fetchone()
         if ds:      # if ds is not None
             if 'datestarted' in ds:                                 # if ds exists
-                if ds['datestarted'] < datetime.now().date():  # and is less than todays date
+                if ds['datestarted'] < datetime.now().date():       # and is less than todays date
                     ds = ds['datestarted']                          # get datestarted
                     print(f"{self.scratchcard.gamenumber} Datestarted found")
                     return ds
@@ -208,10 +216,11 @@ class SC_Mysql:
             # add to main
 
         """ IS THERE A GAMENUMBER SHEET """
-        if not self.table_exist(self.scratchcard.gamenumber):    # if no child table
+
+        if not self.table_exist("sc_log"):    # if no child table
             self.create_child()
-            # create child
-        """ get earliest DATESTARTED FROM GAMENUMBER SHEET """
+
+        """ get earliest DATESTARTED from GAME on sc_log SHEET """
         self.scratchcard.datestarted = self.date_started()
 
         """ LASTUPDATE """
@@ -225,22 +234,119 @@ class SC_Mysql:
             self.insert_child()
         else:
             if self.scratchcard.remainingtop < rt_int:      # if new RT is less than what is currently on the table
-                """ ADD NEW ENTRY TO TABLE """
-                self.insert_child()
+                """ HAS THERE BEEN A LOGGING TODAY? """
+                if self.latest_date() == datetime.now().date():
+                    """UPDATE TODAYS LOG WITH NEW DATA """
+                    self.update_child()
+                else:
+                    """ ADD NEW ENTRY TO TABLE """
+                    self.insert_child()
 
         """ Alive or Dead """
         self.mycursor.execute(f"SELECT * FROM main WHERE status IS NULL OR status = 1")     # select all alive or null
         alive = self.mycursor.fetchall()
 
-        for x in alive:
-            self.mycursor.execute(f"SELECT * FROM `{x['gamenumber']}` WHERE remainingtop = 0")  # remainingtop == 0
-            if len(self.mycursor.fetchall()) > 1:                                               # if anything found
-                print("Remainingtop 0, setting main")
+        for x in alive:                                                         # iterating through unknown status games
+            self.mycursor.execute(f"SELECT * FROM sc_log WHERE gnumber = {x['gamenumber']} AND remainingtop = 0")  # remainingtop == 0
+            if len(self.mycursor.fetchall()) > 1:  # if anything found
+                print(f"Remainingtop 0, GN:{x['gamenumber']} setting main to dead")
                 self.mycursor.execute(f"""UPDATE main SET status=0 WHERE gamenumber={x['gamenumber']}""")
 
             else:
                 self.mycursor.execute(f"""UPDATE main SET status=1 WHERE gamenumber={x['gamenumber']}""")
             self.connection.commit()
+
+        """ Move dead to Deadform """
+    def create_dead(self):
+        if not self.table_exist('dead'):        # if table doesn't exist
+            self.mycursor.execute("CREATE TABLE dead (gamenumber SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (gamenumber),"
+                                  "odds_at_launch TINYTEXT,"
+                                  "total_cards_at_launch INT UNSIGNED,"
+                                  "top_prizes_at_launch INT UNSIGNED,"
+                                  "datestarted DATE,"
+                                  "finaldate DATE,"
+                                  "daysran SMALLINT UNSIGNED);"
+                                  )
+
+            self.connection.commit()
+
+    def move_dead(self):
+        """ List of dead games"""
+        self.mycursor.execute(f"SELECT gamenumber FROM dead;")
+        results = self.mycursor.fetchall()
+        deadgames = list()
+        for game in results:
+            deadgames.append(game['gamenumber'])
+
+        """ list of newly dead games """
+        self.mycursor.execute(f"SELECT gamenumber FROM main WHERE status = 0;")
+        results = self.mycursor.fetchall()
+        newdeadgames = list()
+        for game in results:
+            newdeadgames.append(game['gamenumber'])
+
+        for game in newdeadgames:
+            if game in deadgames:   # if game already in dead sheet
+                print("if game already in dead sheet")
+                self.mycursor.execute(f"UPDATE dead, main SET dead.odds_at_launch = main.odds_at_launch, "
+                                      f"dead.total_cards_at_launch = main.total_cards_at_launch "
+                                      f"WHERE main.gamenumber = {game};")
+            else:                   # game not on dead sheet yet
+                print("game not on dead sheet yet")
+                self.mycursor.execute(f"INSERT INTO dead (gamenumber, odds_at_launch, total_cards_at_launch)"
+                                      f"SELECT gamenumber, odds_at_Launch, total_cards_at_launch"
+                                      f"FROM main WHERE status = 0;")
+
+        self.connection.commit()
+
+        """ GET LIST OF GAMES ON dead """
+        deadgames = list(set(deadgames) | set(newdeadgames))    # merge lists
+        """ GET LIST OF GAMES ON sc_log """
+        self.mycursor.execute(f"SELECT gnumber FROM sc_log;")
+        results = self.mycursor.fetchall()
+        games_logging = list()
+        for game in results:
+            games_logging.append(game['gnumber'])
+
+        for game in deadgames:
+            if game in games_logging:
+                print(f"processing {game}")
+                self.mycursor.execute(f"SELECT datestarted FROM sc_log WHERE gnumber = {game} "
+                                      f"ORDER BY 'datestarted' ASC LIMIT 1;")
+                datestarted = self.mycursor.fetchone()
+                datestarted = datestarted['datestarted']
+
+                self.mycursor.execute(f"SELECT lastupdate FROM sc_log WHERE gnumber = {game} "
+                                      f"ORDER BY 'lastupdate' DESC LIMIT 1;")
+                finaldate = self.mycursor.fetchone()
+                finaldate = finaldate['lastupdate']
+
+                self.mycursor.execute(f"SELECT remainingtop FROM sc_log WHERE gnumber = {game} "
+                                      f"ORDER BY 'remainingtop' DESC LIMIT 1;")
+                top_prizes_at_launch = self.mycursor.fetchone()
+                top_prizes_at_launch = top_prizes_at_launch['remainingtop']
+
+                " TIME GAME RAN FOR"
+                daysran = finaldate - datestarted
+                daysran = daysran.days
+
+                """ UPDATE dead """
+                print(f"Updating dead with {game}, {top_prizes_at_launch}, {datestarted}, {finaldate}, {daysran}")
+                self.mycursor.execute(f"UPDATE dead SET top_prizes_at_launch={top_prizes_at_launch}, "
+                                      f"datestarted = {datestarted}, "
+                                      f"finaldate = {finaldate}, "
+                                      f"daysran = {daysran} "
+                                      f"WHERE gamenumber = {game};")
+
+                self.connection.commit()
+                """ DELETE from sc_log """
+                self.mycursor.execute(f"DELETE FROM sc_log WHERE gnumber = {game};")
+                self.connection.commit()
+
+                """ DELETE FROM MAIN """
+                print("DELETE FROM main WHERE status = 0;")
+                self.mycursor.execute(f"DELETE FROM main WHERE gamenumber = {game} AND status = 0;")
+                self.connection.commit()
 
         self.disconnect()
 

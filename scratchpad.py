@@ -1,12 +1,13 @@
-import matplotlib.ticker as mtick
-from matplotlib import pyplot as plt
-from matplotlib.ticker import PercentFormatter
 
-# df = pd.DataFrame(np.random.randn(100, 5))
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1)
-ax.plot(xaxis, yaxis)
-yticks = mtick.PercentFormatter(xmax=4712) # largest number in remainingtop
-ax.yaxis.set_major_formatter(yticks)
-plt.show()
-"""WORKING, DO NOT LOSE"""
+Updating dead with 1254, 0, 2020-11-26, 2020-11-26, 0
+
+Updating dead with 1196, 0, 2020-11-26, 2020-11-26, 0
+
+Updating dead with 1216, 0, 2020-11-26, 2020-11-26, 0
+
+Updating dead with 1197, 0, 2020-11-26, 2020-11-26, 0
+
+Updating dead with 1194, 0, 2020-11-26, 2020-11-26, 0
+
+Updating dead with 1216, 0, 2020-11-26, 2020-11-26, 0
+

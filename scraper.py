@@ -48,6 +48,9 @@ class Scraper:
         logging.error(string)
         print(string)
 
+    def get_update(self):
+
+
     def scrape(self):
         for tr in self.table_rows[1:]:  # for tableresults in tablerows. Skip first item.
             td = tr.find_all('td')  # tabledata in tablerow
@@ -73,11 +76,16 @@ class Scraper:
             if not self.sc_list[index].valid:   # if data is invalid
                 self.log("Deleting Scratchcard from processing because something invalid:\n" + str(self.sc_list[index]))
                 del self.sc_list[index]         # delete item from list
-
+                # TODO: ADD LOG
     """ store in DB"""
     def store(self):
         for index, scratchcard in enumerate(self.sc_list):
             sc_db = SC_Mysql(self.sc_list[index])   # create instances
             sc_db.process()
+
+            """ Moving the dead """
+            sc_db.create_dead()
+            sc_db.move_dead()
+
             # upload to db
 
