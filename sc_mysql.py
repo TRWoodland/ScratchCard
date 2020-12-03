@@ -1,7 +1,7 @@
 import pymysql.cursors
 from datetime import datetime, timedelta
 import logging
-
+from AwsStuff.sc_creds import AWS_MYSQL_ADD, AWS_MYSQL_USER, AWS_MYSQL_PW
 class SC_Mysql:
     def __init__(self, scratchcard):
         self.scratchcard = scratchcard
@@ -26,20 +26,13 @@ class SC_Mysql:
         try:
             REGION = 'eu-west-2a'
             port = 3306
-            self.connection = pymysql.connect(r"""scdb.cviu5dc5mrn3.eu-west-2.rds.amazonaws.com""",
-                                              user="goddamuglybob",
-                                              passwd="t1ck2099",
+            self.connection = pymysql.connect(AWS_MYSQL_ADD,
+                                              user=AWS_MYSQL_USER,
+                                              passwd=AWS_MYSQL_PW,
                                               db="scdb",
                                               charset='utf8mb4',
                                               cursorclass=pymysql.cursors.DictCursor,
                                               connect_timeout=5)
-
-            # self.connection = pymysql.connect(host='192.168.1.124',
-            #                              user='scbot',
-            #                              password='t1ck2099',
-            #                              db='scdb',
-            #                              charset='utf8mb4',
-            #                              cursorclass=pymysql.cursors.DictCursor)
             self.mycursor = self.connection.cursor()
 
         except self.connection.Error as error:

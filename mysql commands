@@ -32,7 +32,7 @@ CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';
 GRANT ALL PRIVILEGES ON exampledb.* TO 'username'@'localhost';
 change localhost to allow access from any ip
 
-#GRANT ALL PRIVILEGES ON scratchdb.* TO 'scratchbot'@'%' IDENTIFIED BY 't1ck2099';
+#GRANT ALL PRIVILEGES ON scratchdb.* TO 'scratchbot'@'%' IDENTIFIED BY 'mysqlpassword';
 
 #must do this afterwards
 FLUSH PRIVILEGES;
