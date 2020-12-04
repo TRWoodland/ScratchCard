@@ -1,6 +1,7 @@
 # ScratchCard
 ## Web, PDF scraper &amp; odds recalculator
 - A tool designed to prove my ability with Matplotlib and AWS RDS MySQL
+- Also to prove the futility of gambling
  
 I thought it was funny that you can buy scratchcards that have no top prizes remaining, and the odds stated on the back are completely false.
 There is enough information on the website, and on the scratchcard PDF to get a better idea of the odds.

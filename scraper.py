@@ -5,24 +5,12 @@ from datetime import datetime
 import tempfile
 from sc_mysql import SC_Mysql
 from scratchcards import Scratchcards
+from sc_status import SC_Status
 
 
 class Scraper:
     def __init__(self):
-        """ LOGGER """
-        # self.logger = logging.getLogger('Scraper')  # create logger with 'name'
-        # self.logger.setLevel(logging.DEBUG)
-        # self.fh = logging.FileHandler(datetime.today().strftime("Logfile %d %B %Y.log"))  # create file handler which logs even debug messages
-        # self.fh.setLevel(logging.DEBUG)
-        # # self.ch = logging.StreamHandler()  # create console handler with a higher log level
-        # # self.ch.setLevel(logging.ERROR)
-        # # create formatter and add it to the handlers
-        # self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        # self.fh.setFormatter(self.formatter)
-        # # self.ch.setFormatter(self.formatter)
-        # # # add the handlers to the logger
-        # self.logger.addHandler(self.fh)
-        # # self.logger.addHandler(self.ch)
+
         if len(logging.getLogger().handlers) > 0:
             # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
             # `.basicConfig` does not execute. Thus we set the level directly.
@@ -48,8 +36,12 @@ class Scraper:
         logging.error(string)
         print(string)
 
-    def get_update(self):
-
+    def get_status(self):
+        status = SC_Status()
+        status.connect()
+        dict_of_alive_rt, dead_list = status.get_remainingtops()
+        status.disconnect()
+        return dict_of_alive_rt, dead_list
 
     def scrape(self):
         for tr in self.table_rows[1:]:  # for tableresults in tablerows. Skip first item.
@@ -66,8 +58,18 @@ class Scraper:
             row.append(self.temp_pdfs)
 
             """ STORE DATA """
+            """ 1: gamename 2: gamenumber 5: remainingtop """
+
+            print("gamenumber: " + str(type(row[2])) + str(row[2]))
             self.sc_list.append(Scratchcards(row))  # list of objects
+
             # print("Row data: " + str(row))
+    def dead_or_nochange(self):
+        dict_of_alive_rt, dead_list = self.get_status()
+        """
+        IF VALID IS FALSE. DELETE. 
+        IF DEAD DELETE. 
+        IF RT == THEN DELETE"""
 
     """ Check and Completes data, PDF scraping """
     def verify(self):
@@ -89,3 +91,5 @@ class Scraper:
 
             # upload to db
 
+s = Scraper()
+s.scrape()

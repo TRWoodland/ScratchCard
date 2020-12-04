@@ -1,0 +1,12 @@
+get dead gn
+get live gn
+get live RTs
+
+if game dead on website and dead in db, skip
+
+if game rt is the same as on db, skip
+
+
+
+
+

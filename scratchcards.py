@@ -6,6 +6,10 @@ import logging
 
 class Scratchcards:
     def __init__(self, rowdata):
+
+        """ If value turns false """
+        self.valid = True
+
         # self.module_logger = logging.getLogger('Scraper.Scratchcards')
         #self.module_logger.info("something")
         #self.module_logger.error("thing")
@@ -31,37 +35,19 @@ class Scratchcards:
             # self.gamename = ""
             pass
 
-        """ If value turns false """
-        self.valid = True
-
         """ Information scraped later"""
         self.pdf_text = str()
         self.odds_at_launch = str()
         self.total_cards_at_launch = int()
         #self.winning_cards_launch = float()
 
-        """ FIX IMAGE URL """
-        pattern = re.compile(r"""(page\/scratchcards\/popup\/.*\.jpg)""")
-        self.image = pattern.findall(self.image)                                            # returns list
-        if len(self.image) == 0:                                                          # if list empty
-            self.validity(str(self.gamenumber) + " RE failed to find image url: " + self.image)
-        else:
-            self.image = r"""https://www.cdn-national-lottery.co.uk/c/i/""" + self.image[0]     # list to string
-
-        """ FIX PDF URL """
-        pattern = re.compile(r"""(files\/scratchcards\/.*\.pdf)""")
-        self.pdf_url = pattern.findall(self.pdf_url)                                        # returns list
-        if len(self.pdf_url) == 0:                                                          # if list empty
-            self.validity(str(self.gamenumber) + " RE failed to find PDF_URL: " + self.pdf_url)
-        else:
-            self.pdf_url = r"""https://www.national-lottery.co.uk/c/""" + self.pdf_url[0]       # list to string
-
-        """ MAKE PDF FILENAME """
-        self.pdf = self.pdf_url.split(r"""/""")     # split url up into list
-        self.pdf = self.pdf[-1]                     # get filename
-
-        self.variables = [self.gamename, self.gamenumber, self.cost, self.bigprize, self.remainingtop,
-                          self.image, self.pdf_url]                                             # for testing
+        try:
+            self.gamenumber = int(self.gamenumber)
+            self.remainingtop = int(self.remainingtop)
+        except ValueError:
+            self.validity(f"ValueError on Gamenumber or remainingtop:\n "
+                          f"{str(self.gamenumber)} {str(type(self.gamenumber))}\n"
+                          f"{str(self.remainingtop)} {str(type(self.remainingtop))}")
         """end of init"""
 
     def __str__(self):
@@ -87,6 +73,7 @@ class Scratchcards:
     def validity(self, string):
         self.log(self, string)
         self.valid = False
+
 
     def check_data(self):
 
@@ -134,12 +121,33 @@ class Scratchcards:
         except TypeError:
             self.validity(str(self.gamenumber) + " remainingtop wrong data type: " + str(self.remainingtop))
 
-        """ image """
+        """ FIX IMAGE URL """
+        pattern = re.compile(r"""(page\/scratchcards\/popup\/.*\.jpg)""")
+        self.image = pattern.findall(self.image)  # returns list
+        if len(self.image) == 0:  # if list empty
+            self.validity(str(self.gamenumber) + " RE failed to find image url: " + self.image)
+        else:
+            self.image = r"""https://www.cdn-national-lottery.co.uk/c/i/""" + self.image[0]  # list to string
+
         # if the status code is not an error code (4xx or 5xx), it is considered ‘true’:
         if not requests.get(self.image, stream=True, timeout=3):
             self.validity(str(self.gamenumber) + " image url not working: " + str(self.image))
 
-        """ pdf_url """
+        """ FIX PDF URL """
+        pattern = re.compile(r"""(files\/scratchcards\/.*\.pdf)""")
+        self.pdf_url = pattern.findall(self.pdf_url)  # returns list
+        if len(self.pdf_url) == 0:  # if list empty
+            self.validity(str(self.gamenumber) + " RE failed to find PDF_URL: " + self.pdf_url)
+        else:
+            self.pdf_url = r"""https://www.national-lottery.co.uk/c/""" + self.pdf_url[0]  # list to string
+
+        """ MAKE PDF FILENAME """
+        self.pdf = self.pdf_url.split(r"""/""")  # split url up into list
+        self.pdf = self.pdf[-1]  # get filename
+
+        self.variables = [self.gamename, self.gamenumber, self.cost, self.bigprize, self.remainingtop,
+                          self.image, self.pdf_url]  # for testing
+
         if not isinstance(self.pdf_url, str):
             self.validity(str(self.gamenumber) + " pdf not a string: " + str(self.pdf_url))
         else:
